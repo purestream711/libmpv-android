@@ -1,0 +1,45 @@
+diff --git a/.github/workflows/build.yaml b/.github/workflows/build.yaml
+index 7010deb..e10a20a 100644
+--- a/.github/workflows/build.yaml
++++ b/.github/workflows/build.yaml
+@@ -4,6 +4,7 @@ on:
+   push:
+     branches:
+       - main
++      - lgpl
+   pull_request:
+ 
+ jobs:
+diff --git a/buildscripts/scripts/ffmpeg.sh b/buildscripts/scripts/ffmpeg.sh
+index affccce..9e7b6b3 100755
+--- a/buildscripts/scripts/ffmpeg.sh
++++ b/buildscripts/scripts/ffmpeg.sh
+@@ -28,7 +28,7 @@ cpuflags=
+ 	--arch=${ndk_triple%%-*} --cpu=$cpu --pkg-config=pkg-config --nm=llvm-nm \
+ 	--extra-cflags="-I$prefix_dir/include $cpuflags" --extra-ldflags="-L$prefix_dir/lib" \
+ 	--enable-{jni,mediacodec,mbedtls,libdav1d} --disable-vulkan \
+-	--disable-static --enable-shared --enable-{gpl,version3} \
++	--disable-static --enable-shared --enable-version3 \
+ 	--disable-{stripping,doc,programs} \
+ 	--disable-{muxers,encoders,devices,filters} \
+ 	--disable-v4l2-m2m
+@@ -37,7 +37,6 @@ make -j$cores
+ make DESTDIR="$prefix_dir" install
+ 
+ ln -sf "$prefix_dir"/lib/libswresample.so "$native_dir"
+-ln -sf "$prefix_dir"/lib/libpostproc.so "$native_dir"
+ ln -sf "$prefix_dir"/lib/libavutil.so "$native_dir"
+ ln -sf "$prefix_dir"/lib/libavcodec.so "$native_dir"
+ ln -sf "$prefix_dir"/lib/libavformat.so "$native_dir"
+diff --git a/buildscripts/scripts/mpv.sh b/buildscripts/scripts/mpv.sh
+index 92f16a3..92c45dd 100755
+--- a/buildscripts/scripts/mpv.sh
++++ b/buildscripts/scripts/mpv.sh
+@@ -18,6 +18,7 @@ unset CC CXX # meson wants these unset
+ 
+ meson setup $build --cross-file "$prefix_dir"/crossfile.txt \
+ 	--default-library shared \
++	-Dgpl=false \
+ 	-Diconv=disabled -Dlua=enabled \
+ 	-Dlibmpv=true -Dcplayer=false \
+ 	-Dmanpage-build=disabled

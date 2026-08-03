@@ -31,6 +31,9 @@ cpuflags=
 	--disable-static --enable-shared --enable-version3 \
 	--disable-{stripping,doc,programs} \
 	--disable-{muxers,encoders,devices,filters} \
+	--enable-filter=dynaudnorm \
+	--enable-filter=abuffer --enable-filter=abuffersink \
+	--enable-filter=aresample --enable-filter=aformat --enable-filter=anull \
 	--disable-v4l2-m2m
 
 make -j$cores

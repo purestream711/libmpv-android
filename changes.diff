@@ -1,0 +1,135 @@
+diff --git a/.github/workflows/build.yaml b/.github/workflows/build.yaml
+index 00c08af..424f1a0 100644
+--- a/.github/workflows/build.yaml
++++ b/.github/workflows/build.yaml
+@@ -4,6 +4,7 @@ on:
+   push:
+     branches:
+       - main
++      - lgpl-1.0.0
+   pull_request:
+ 
+ jobs:
+diff --git a/.github/workflows/publish.yaml b/.github/workflows/publish.yaml
+deleted file mode 100644
+index 1f83987..0000000
+--- a/.github/workflows/publish.yaml
++++ /dev/null
+@@ -1,67 +0,0 @@
+-name: Publish
+-
+-on:
+-  push:
+-    tags:
+-      - v*
+-
+-jobs:
+-  publish:
+-    name: Publish
+-    runs-on: ubuntu-latest
+-    environment: release
+-    if: ${{ contains(github.repository_owner, 'jarnedemeulemeester') || startsWith(github.ref, 'refs/tags/v') }}
+-    steps:
+-      - name: Checkout repository
+-        uses: actions/checkout@v6
+-
+-      - name: Setup Java JDK
+-        uses: actions/setup-java@v5
+-        with:
+-          distribution: temurin
+-          java-version: 21
+-
+-      - name: Setup Gradle
+-        uses: gradle/actions/setup-gradle@v6
+-
+-      - name: Symlink SDK
+-        working-directory: ./buildscripts
+-        run: |
+-          mkdir sdk
+-          ln -s ${ANDROID_HOME} ./sdk/android-sdk-linux
+-
+-      - name: Install system dependencies
+-        run: |
+-          sudo apt-get update
+-          sudo apt-get install -y autoconf pkgconf libtool ninja-build python3-pip python3-jinja2 gperf nasm
+-          sudo pip3 install --break-system-packages meson
+-
+-      - name: Download dependencies
+-        working-directory: ./buildscripts
+-        env:
+-          IN_CI: 1
+-        run: ./download.sh
+-
+-      - name: Apply patches
+-        working-directory: ./buildscripts
+-        run: ./patch.sh
+-
+-      - name: Build
+-        working-directory: ./buildscripts
+-        run: ./build.sh
+-
+-      - name: Publish
+-        run: ./gradlew publishToMavenCentral --no-configuration-cache
+-        env:
+-          ORG_GRADLE_PROJECT_mavenCentralUsername: ${{ secrets.OSSRH_USERNAME }}
+-          ORG_GRADLE_PROJECT_mavenCentralPassword: ${{ secrets.OSSRH_PASSWORD }}
+-          ORG_GRADLE_PROJECT_signingInMemoryKey: ${{ secrets.SIGNING_KEY }}
+-          ORG_GRADLE_PROJECT_signingInMemoryKeyId: ${{ secrets.SIGNING_KEY_ID }}
+-          ORG_GRADLE_PROJECT_signingInMemoryKeyPassword: ${{ secrets.SIGNING_PASSWORD }}
+-
+-      - name: Create release
+-        uses: softprops/action-gh-release@v2
+-        with:
+-          draft: true
+-          files: |
+-            ./libmpv/build/outputs/aar/libmpv-release.aar
+diff --git a/buildscripts/scripts/ffmpeg.sh b/buildscripts/scripts/ffmpeg.sh
+index acf4a81..5289b91 100755
+--- a/buildscripts/scripts/ffmpeg.sh
++++ b/buildscripts/scripts/ffmpeg.sh
+@@ -28,16 +28,18 @@ cpuflags=
+ 	--arch=${ndk_triple%%-*} --cpu=$cpu --pkg-config=pkg-config --nm=llvm-nm \
+ 	--extra-cflags="-I$prefix_dir/include $cpuflags" --extra-ldflags="-L$prefix_dir/lib" \
+ 	--enable-{jni,mediacodec,mbedtls,libdav1d,libxml2} --disable-vulkan \
+-	--disable-static --enable-shared --enable-{gpl,version3} \
++	--disable-static --enable-shared --enable-version3 \
+ 	--disable-{stripping,doc,programs} \
+ 	--disable-{muxers,encoders,devices,filters} \
++	--enable-filter=dynaudnorm \
++	--enable-filter=aresample --enable-filter=aformat --enable-filter=anull \
++	--enable-filter=bwdif --enable-filter=yadif \
+ 	--disable-v4l2-m2m
+ 
+ make -j$cores
+ make DESTDIR="$prefix_dir" install
+ 
+ ln -sf "$prefix_dir"/lib/libswresample.so "$native_dir"
+-ln -sf "$prefix_dir"/lib/libpostproc.so "$native_dir"
+ ln -sf "$prefix_dir"/lib/libavutil.so "$native_dir"
+ ln -sf "$prefix_dir"/lib/libavcodec.so "$native_dir"
+ ln -sf "$prefix_dir"/lib/libavformat.so "$native_dir"
+diff --git a/buildscripts/scripts/mpv.sh b/buildscripts/scripts/mpv.sh
+index 92f16a3..606b670 100755
+--- a/buildscripts/scripts/mpv.sh
++++ b/buildscripts/scripts/mpv.sh
+@@ -20,6 +20,7 @@ meson setup $build --cross-file "$prefix_dir"/crossfile.txt \
+ 	--default-library shared \
+ 	-Diconv=disabled -Dlua=enabled \
+ 	-Dlibmpv=true -Dcplayer=false \
++	-Dgpl=false \
+ 	-Dmanpage-build=disabled
+ 
+ ninja -C $build -j$cores
+diff --git a/libmpv/build.gradle.kts b/libmpv/build.gradle.kts
+index 56a1313..4ab1365 100755
+--- a/libmpv/build.gradle.kts
++++ b/libmpv/build.gradle.kts
+@@ -55,7 +55,7 @@ mavenPublishing {
+     coordinates(
+         groupId = "dev.jdtech.mpv",
+         artifactId = "libmpv",
+-        version = "1.0.0"
++        version = "1.0.0-lgpl"
+     )
+ 
+     pom {

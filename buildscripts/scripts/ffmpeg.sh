@@ -31,9 +31,11 @@ cpuflags=
 	--disable-static --enable-shared --enable-version3 \
 	--disable-{stripping,doc,programs} \
 	--disable-{muxers,encoders,devices,filters} \
+	--enable-muxer=spdif \
 	--enable-filter=dynaudnorm \
 	--enable-filter=aresample --enable-filter=aformat --enable-filter=anull \
 	--enable-filter=bwdif --enable-filter=yadif \
+	--enable-filter=scale --enable-filter=format --enable-filter=null \
 	--disable-v4l2-m2m
 
 make -j$cores

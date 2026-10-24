@@ -84,10 +84,10 @@ index 1f83987..0000000
 -          files: |
 -            ./libmpv/build/outputs/aar/libmpv-release.aar
 diff --git a/buildscripts/scripts/ffmpeg.sh b/buildscripts/scripts/ffmpeg.sh
-index acf4a81..5289b91 100755
+index acf4a81..40b47ba 100755
 --- a/buildscripts/scripts/ffmpeg.sh
 +++ b/buildscripts/scripts/ffmpeg.sh
-@@ -28,16 +28,18 @@ cpuflags=
+@@ -28,16 +28,20 @@ cpuflags=
  	--arch=${ndk_triple%%-*} --cpu=$cpu --pkg-config=pkg-config --nm=llvm-nm \
  	--extra-cflags="-I$prefix_dir/include $cpuflags" --extra-ldflags="-L$prefix_dir/lib" \
  	--enable-{jni,mediacodec,mbedtls,libdav1d,libxml2} --disable-vulkan \
@@ -95,9 +95,11 @@ index acf4a81..5289b91 100755
 +	--disable-static --enable-shared --enable-version3 \
  	--disable-{stripping,doc,programs} \
  	--disable-{muxers,encoders,devices,filters} \
++	--enable-muxer=spdif \
 +	--enable-filter=dynaudnorm \
 +	--enable-filter=aresample --enable-filter=aformat --enable-filter=anull \
 +	--enable-filter=bwdif --enable-filter=yadif \
++	--enable-filter=scale --enable-filter=format --enable-filter=null \
  	--disable-v4l2-m2m
  
  make -j$cores
@@ -121,7 +123,7 @@ index 92f16a3..606b670 100755
  
  ninja -C $build -j$cores
 diff --git a/libmpv/build.gradle.kts b/libmpv/build.gradle.kts
-index 56a1313..4ab1365 100755
+index 56a1313..d4b3c8a 100755
 --- a/libmpv/build.gradle.kts
 +++ b/libmpv/build.gradle.kts
 @@ -55,7 +55,7 @@ mavenPublishing {
@@ -129,7 +131,7 @@ index 56a1313..4ab1365 100755
          groupId = "dev.jdtech.mpv",
          artifactId = "libmpv",
 -        version = "1.0.0"
-+        version = "1.0.0-lgpl"
++        version = "1.0.1-lgpl"
      )
  
      pom {

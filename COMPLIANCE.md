@@ -7,7 +7,7 @@ and one upstream bug-fix cherry-pick.
 
 ## What was changed
 
-Three patch sets, all in the build configuration:
+Four patch sets, all in the build configuration:
 
 1. **FFmpeg 8.1 built LGPL-only** — `--enable-{gpl,version3}` reduced to
    `--enable-version3`; `--enable-nonfree` is never used. FFmpeg is
@@ -23,7 +23,18 @@ Three patch sets, all in the build configuration:
    commit `194ef56b`) and bwdif was LGPL from the start. Neither appears
    in FFmpeg's `LICENSE.md` GPL enumeration nor among configure's
    GPL-gated filter dependencies.
+   Since v1.0.1-lgpl the list also carries `scale`, `format` and `null`:
+   the converters libavfilter inserts on its own when a filter does not
+   take the incoming pixel format (`bwdif` / `yadif` take no NV12, which
+   is what MediaCodec copy-back decoding produces), so deinterlacing works
+   on those frames too. All three are LGPL-2.1+ (`vf_scale.c`,
+   `vf_format.c`, `vf_null.c`) and not GPL-gated.
 3. **mpv 0.41.0 built with `-Dgpl=false`** → LGPL v2.1 or later.
+4. **One muxer** (since v1.0.1-lgpl) — upstream disables all muxers
+   (`--disable-muxers`); `spdif` is re-enabled. mpv's audio passthrough
+   (`--audio-spdif`) wraps AC-3 / E-AC-3 / DTS / TrueHD in IEC 61937
+   frames with it; without it passthrough produces no audio.
+   `libavformat/spdifenc.c` is LGPL-2.1+ and not GPL-gated.
 
 Also on this branch, not license-related:
 
@@ -32,8 +43,9 @@ Also on this branch, not license-related:
 - `.github/workflows/publish.yaml`: deleted. It fires on any `v*` tag and
   publishes to Maven Central, for which this fork has no credentials and
   wants none; leaving it would make every release tag a failed run.
-- `libmpv/build.gradle.kts`: artifact version `1.0.0` → `1.0.0-lgpl`, so
-  a fork build can never be mistaken for an upstream artifact.
+- `libmpv/build.gradle.kts`: artifact version `1.0.0` → `1.0.1-lgpl`
+  (`1.0.0-lgpl` before the muxer / converter additions), so a fork build
+  can never be mistaken for an upstream artifact.
 - `libmpv/src/main/java/dev/jdtech/mpv/MPVLib.kt`: upstream commit
   `bf5e0d80` ("fix: make `destroy` idempotent") cherry-picked verbatim
   from upstream `main`. At the v1.0.0 tag a second `destroy()` call
@@ -119,6 +131,7 @@ Run the GitHub Actions workflow on this branch, or locally on Linux:
 Source archives for every (L)GPL-licensed component — plus the three new
 permissive dependencies, attached for completeness rather than
 obligation — at exactly the versions pinned by `depinfo.sh`, are attached
-to the `v1.0.0-lgpl` GitHub Release alongside the binary AAR they
-correspond to. This repository and that release together constitute the
+to the `v1.0.1-lgpl` GitHub Release (and, for the previous build, to
+`v1.0.0-lgpl`) alongside the binary AAR they correspond to. The pinned
+versions did not change between the two. This repository and that release together constitute the
 LGPL §6 offer of corresponding source.

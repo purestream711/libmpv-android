@@ -55,7 +55,7 @@ mavenPublishing {
     coordinates(
         groupId = "dev.jdtech.mpv",
         artifactId = "libmpv",
-        version = "1.0.1-lgpl"
+        version = "1.0.2-lgpl"
     )
 
     pom {

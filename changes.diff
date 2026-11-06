@@ -83,6 +83,30 @@ index 1f83987..0000000
 -          draft: true
 -          files: |
 -            ./libmpv/build/outputs/aar/libmpv-release.aar
+diff --git a/buildscripts/patches/mpv/0001-ao-audiotrack-idle-wait.patch b/buildscripts/patches/mpv/0001-ao-audiotrack-idle-wait.patch
+new file mode 100644
+index 0000000..6fbe868
+--- /dev/null
++++ b/buildscripts/patches/mpv/0001-ao-audiotrack-idle-wait.patch
+@@ -0,0 +1,18 @@
++diff --git a/audio/out/ao_audiotrack.c b/audio/out/ao_audiotrack.c
++index f483ccc..d8ea18f 100644
++--- a/audio/out/ao_audiotrack.c
+++++ b/audio/out/ao_audiotrack.c
++@@ -584,6 +584,13 @@ static MP_THREAD_VOID ao_thread(void *arg)
++             ts += MP_TIME_S_TO_NS(read_samples / (double)(ao->samplerate));
++             ts += MP_TIME_S_TO_NS(AudioTrack_getLatency(ao));
++             int samples = ao_read_data(ao, &p->chunk, read_samples, ts, NULL, false, false);
+++            // Changed 2026-11-06 (libmpv-android LGPL build): with nothing to write, wait instead of
+++            // going straight round. write(0) returns at once, so an underrun with the track playing
+++            // was a busy loop holding p->lock for as long as it lasted. start() signals p->wakeup.
+++            if (samples == 0) {
+++                mp_cond_timedwait(&p->wakeup, &p->lock, MP_TIME_MS_TO_NS(10));
+++                continue;
+++            }
++             int ret = AudioTrack_write(ao, samples * ao->sstride);
++             if (ret >= 0) {
++                 p->written_frames += ret / ao->sstride;
 diff --git a/buildscripts/scripts/ffmpeg.sh b/buildscripts/scripts/ffmpeg.sh
 index acf4a81..40b47ba 100755
 --- a/buildscripts/scripts/ffmpeg.sh
@@ -123,7 +147,7 @@ index 92f16a3..606b670 100755
  
  ninja -C $build -j$cores
 diff --git a/libmpv/build.gradle.kts b/libmpv/build.gradle.kts
-index 56a1313..d4b3c8a 100755
+index 56a1313..6b485d0 100755
 --- a/libmpv/build.gradle.kts
 +++ b/libmpv/build.gradle.kts
 @@ -55,7 +55,7 @@ mavenPublishing {
@@ -131,7 +155,7 @@ index 56a1313..d4b3c8a 100755
          groupId = "dev.jdtech.mpv",
          artifactId = "libmpv",
 -        version = "1.0.0"
-+        version = "1.0.1-lgpl"
++        version = "1.0.2-lgpl"
      )
  
      pom {

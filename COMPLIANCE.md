@@ -3,11 +3,13 @@
 This branch (`lgpl-1.0.0`) is a fork of jarnedemeulemeester/libmpv-android
 at tag v1.0.0, modified ONLY to produce an LGPL-licensed native stack,
 plus a CI trigger line for this branch, a fork-distinct artifact version,
-and one upstream bug-fix cherry-pick.
+one upstream bug-fix cherry-pick, and one source patch to mpv (below).
 
 ## What was changed
 
-Four patch sets, all in the build configuration:
+Five patch sets: four in the build configuration, and one source patch to mpv
+(`buildscripts/patches/mpv/0001-ao-audiotrack-idle-wait.patch`, dated in the changed
+file as LGPL section 2(b) asks, applied by `buildscripts/patch.sh`):
 
 1. **FFmpeg 8.1 built LGPL-only** — `--enable-{gpl,version3}` reduced to
    `--enable-version3`; `--enable-nonfree` is never used. FFmpeg is
@@ -43,8 +45,9 @@ Also on this branch, not license-related:
 - `.github/workflows/publish.yaml`: deleted. It fires on any `v*` tag and
   publishes to Maven Central, for which this fork has no credentials and
   wants none; leaving it would make every release tag a failed run.
-- `libmpv/build.gradle.kts`: artifact version `1.0.0` → `1.0.1-lgpl`
-  (`1.0.0-lgpl` before the muxer / converter additions), so a fork build
+- `libmpv/build.gradle.kts`: artifact version `1.0.0` → `1.0.2-lgpl`
+  (`1.0.1-lgpl` before the audio output patch, `1.0.0-lgpl` before the muxer /
+  converter additions), so a fork build
   can never be mistaken for an upstream artifact.
 - `libmpv/src/main/java/dev/jdtech/mpv/MPVLib.kt`: upstream commit
   `bf5e0d80` ("fix: make `destroy` idempotent") cherry-picked verbatim
@@ -56,7 +59,7 @@ against upstream v1.0.0, generated with:
 
     git diff v1.0.0..lgpl-1.0.0 -- buildscripts .github libmpv/build.gradle.kts
 
-The only changed file it does not cover is the `MPVLib.kt` cherry-pick
+It includes the mpv source patch. The only changed file it does not cover is the `MPVLib.kt` cherry-pick
 above, which is upstream's own commit applied unmodified. The branch
 itself is the authoritative complete source.
 
@@ -131,7 +134,9 @@ Run the GitHub Actions workflow on this branch, or locally on Linux:
 Source archives for every (L)GPL-licensed component — plus the three new
 permissive dependencies, attached for completeness rather than
 obligation — at exactly the versions pinned by `depinfo.sh`, are attached
-to the `v1.0.1-lgpl` GitHub Release (and, for the previous build, to
-`v1.0.0-lgpl`) alongside the binary AAR they correspond to. The pinned
-versions did not change between the two. This repository and that release together constitute the
+to the `v1.0.2-lgpl` GitHub Release (and, for the previous builds, to
+`v1.0.1-lgpl` and `v1.0.0-lgpl`) alongside the binary AAR they correspond to,
+together with the mpv source patch: the mpv in `v1.0.2-lgpl` is the pinned
+tarball with that patch applied. The pinned versions did not change between
+the three. This repository and that release together constitute the
 LGPL §6 offer of corresponding source.
